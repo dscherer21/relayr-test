@@ -8,13 +8,10 @@ function App() {
         const fetchData = () => {
             axios.get('http://127.0.0.1:8888/devices')
             .then((response) => {
-                //const data = Object.keys(response.data);
-                setDeviceData(response.data);
+                setDeviceData(response.data.data);
                 console.log(response.data);
                 console.log(response.data.data[0].name);
-            })
-            .then(() => {
-                console.log(deviceData);
+                console.log(response.data.data[0].active);
             })
             .catch((error) => {
                 //handle error
@@ -26,23 +23,23 @@ function App() {
         }
       
         fetchData();
-        console.log(deviceData);
     }, []);
+    console.log(deviceData);
+    console.log(deviceData.data);
 
     return (
         <div>
             <div className='instructions'>
                 <h1>Relayr Device Dashboard</h1>
-                <p>Feel free to implement UI the way you like.</p>
             </div>
-
-            <div className='instructions'>
-                <p>Device Name: </p>
-                <p>Device Unit: </p>
-            </div>
-            {Object.keys(deviceData).map((device, index) => (
+            {deviceData.map((device, index) => (
                 <div className='instructions' key={index}>
-                    <h1>Device Name: {device}</h1>
+                    <h1>Device Name: {device.name}</h1>
+                    <p>Device Unit: {device.unit}</p>
+                    <p>Device Timestamp: {device.timestamp}</p>
+                    <p>Device Value: {device.value}</p>
+                    <p>Device Active: {String(device.active)}</p>
+                    <button>Toggle Active Status</button>
                 </div>
             ))}
         </div>
