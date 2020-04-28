@@ -8,8 +8,8 @@ function App() {
         const fetchData = () => {
             axios.get('http://127.0.0.1:8888/devices')
             .then((response) => {
-                const data = Object.keys(response.data);
-                setDeviceData(data);
+                //const data = Object.keys(response.data);
+                setDeviceData(response.data);
                 console.log(response.data);
                 console.log(response.data.data[0].name);
             })
@@ -37,9 +37,14 @@ function App() {
             </div>
 
             <div className='instructions'>
-                <p>Device Name: {deviceData}</p>
+                <p>Device Name: </p>
                 <p>Device Unit: </p>
             </div>
+            {Object.keys(deviceData).map((device, index) => (
+                <div className='instructions' key={index}>
+                    <h1>Device Name: {device}</h1>
+                </div>
+            ))}
         </div>
     );
 }
