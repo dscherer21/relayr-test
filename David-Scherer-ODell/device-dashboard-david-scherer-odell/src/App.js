@@ -12,27 +12,34 @@ function App() {
     let activeDevices = deviceData.filter(device => device.active).length;
     //Variable that is grabbing the number of 'False' boolean values in the deviceData array
     let inactiveDevices = deviceData.filter(device => !device.active).length;
+    //Variable that stroes the Axios call to fetch the API data
+    const fetchData = () => {
+        //Show an 'Updating' message while the API call is being made
+        setStatusMsg(
+            <h3>Updating...</h3>
+        );
+        //Axios call to get the data from the backend API
+        axios.get('http://127.0.0.1:8888/devices')
+        .then((response) => {
+            //setting the response as state
+            setDeviceData(response.data.data);
+            //logging the response in the console
+            console.log(response.data);
+            //Remove the 'Updating' message once the API call clears
+            setStatusMsg();
+        })
+        .catch((error) => {
+            //handle error
+            console.log(error);
+            //Display 'Call Failed' message is API call fails
+            setStatusMsg(
+                <h3 style={{color: "red"}}>Failed to retrieve device data!</h3>
+            );
+        })
+    }
 
     useEffect(() => {
-        const fetchData = () => {
-            setStatusMsg(
-                <h3>Loading...</h3>
-            );
-            //Axios call to get the data from the backend API
-            axios.get('http://127.0.0.1:8888/devices')
-            .then((response) => {
-                //setting the response as state
-                setDeviceData(response.data.data);
-                //logging the response in the console
-                console.log(response.data);
-                setStatusMsg();
-            })
-            .catch((error) => {
-                //handle error
-                console.log(error);
-            })
-        }
-      
+        //Initial Axios call to get the data from the backend API when the page loads
         fetchData();
     }, []);
 
@@ -73,34 +80,16 @@ function App() {
         let readingName = deviceValues.name;
         let active = !deviceValues.active;
 
-        setStatusMsg(
-            <h3>Updating...</h3>
-        );
-        //Axios call to get the data from the backend API
+        //Axios patch call to send the updated data to the backend API
         axios.patch('http://127.0.0.1:8888/devices/' + readingName + '?active=' + active + '')
         .then(function (response) {
             console.log(response);
             //Axios call to resend the data if the patch call clears
-            const refetchData = () => {
-                //Axios call to get the data from the backend API
-                axios.get('http://127.0.0.1:8888/devices')
-                .then((response) => {
-                    setStatusMsg();
-                    //setting the response as state
-                    setDeviceData(response.data.data);
-                    //logging the response in the console
-                    console.log(response.data);
-                })
-                .catch((error) => {
-                    //handle error
-                    console.log(error);
-                })
-            }
-          
-            refetchData();
+            fetchData();
         })
         .catch(function (error) {
             console.log(error);
+            //if patch call fails send 'Resquest Failed' message
             setStatusMsg(
                 <h3 style={{color: "red"}}>Request Failed! Please try again later.</h3>
             );
