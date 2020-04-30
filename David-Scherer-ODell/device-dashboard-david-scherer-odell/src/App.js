@@ -4,7 +4,10 @@ import axios from 'axios';
 function App() {
     //State variable where the API response will be stored.
     const [deviceData, setDeviceData] = useState([]);
+    //State variable where the searchTerm entered into the searchbar is stored.
     const [searchDeviceElement, setSearchDeviceElement] = useState();
+    //State variable used to store a status message during API calls
+    const [statusMsg, setStatusMsg] =useState();
     // Variable that is grabbing the number of 'True' boolean values in the deviceData Array
     let activeDevices = deviceData.filter(device => device.active).length;
     //Variable that is grabbing the number of 'False' boolean values in the deviceData array
@@ -12,6 +15,9 @@ function App() {
 
     useEffect(() => {
         const fetchData = () => {
+            setStatusMsg(
+                <h3>Loading...</h3>
+            );
             //Axios call to get the data from the backend API
             axios.get('http://127.0.0.1:8888/devices')
             .then((response) => {
@@ -19,14 +25,12 @@ function App() {
                 setDeviceData(response.data.data);
                 //logging the response in the console
                 console.log(response.data);
+                setStatusMsg();
             })
             .catch((error) => {
                 //handle error
                 console.log(error);
             })
-            .finally(() => {
-                //always executed
-            });
         }
       
         fetchData();
@@ -49,35 +53,58 @@ function App() {
                     <p>Device Timestamp: {deviceData[deviceData.indexOf(searchDevices)].timestamp}</p>
                     <p>Device Value: {deviceData[deviceData.indexOf(searchDevices)].value}</p>
                     <p>Device Active: {String(deviceData[deviceData.indexOf(searchDevices)].active)}</p>
-                    <button className={deviceData.indexOf(searchDevices)} onClick={toggleDeviceStatus}>Toggle Active Status</button>
+                    <button data-value={deviceData.indexOf(searchDevices)} onClick={() => toggleDeviceStatus(deviceData[deviceData.indexOf(searchDevices)])}>Toggle Active Status</button>
+                    {statusMsg}
                 </div> 
             );
+            
         } else {
             //if searchDevices returns undefined generate 'not found' message
             setSearchDeviceElement(
-                <p>Sorry! Unfortunately, no devices match that name.</p>
+                <p>Sorry! Unfortunately, no devices match that name. Please type the full name of the device you are trying to find.</p>
             );
         }
+        document.getElementById('searchParameter').value = '';
     }
 
-    function toggleDeviceStatus() {
+    function toggleDeviceStatus(deviceValues) {
         console.log('Button Clicked');
-        console.log(document.getElementsByClassName().getAttribute('className'));
+        console.log(deviceValues);
+        let readingName = deviceValues.name;
+        let active = !deviceValues.active;
+
+        setStatusMsg(
+            <h3>Updating...</h3>
+        );
         //Axios call to get the data from the backend API
-        /*axios.patch('http://127.0.0.1:8888/devices')
-        .then((response) => {
-            //setting the response as state
-            setDeviceData(response.data.data);
-            //logging the response in the console
-            console.log(response.data);
+        axios.patch('http://127.0.0.1:8888/devices/' + readingName + '?active=' + active + '')
+        .then(function (response) {
+            console.log(response);
+            //Axios call to resend the data if the patch call clears
+            const refetchData = () => {
+                //Axios call to get the data from the backend API
+                axios.get('http://127.0.0.1:8888/devices')
+                .then((response) => {
+                    setStatusMsg();
+                    //setting the response as state
+                    setDeviceData(response.data.data);
+                    //logging the response in the console
+                    console.log(response.data);
+                })
+                .catch((error) => {
+                    //handle error
+                    console.log(error);
+                })
+            }
+          
+            refetchData();
         })
-        .catch((error) => {
-            //handle error
+        .catch(function (error) {
             console.log(error);
-        })
-        .finally(() => {
-            //always executed
-        });*/
+            setStatusMsg(
+                <h3 style={{color: "red"}}>Request Failed! Please try again later.</h3>
+            );
+        });
     }
 
     return (
@@ -104,7 +131,8 @@ function App() {
                     <p>Device Timestamp: {device.timestamp}</p>
                     <p>Device Value: {device.value}</p>
                     <p>Device Active: {String(device.active)}</p>
-                    <button className={index} onClick={toggleDeviceStatus}>Toggle Active Status</button>
+                    <button data-value={index} onClick={() => toggleDeviceStatus(device)}>Toggle Active Status</button>
+                    {statusMsg}
                 </div>
             ))}
         </div>
